@@ -1,9 +1,21 @@
 # rot13
+https://github.com/CausticKirbyZ/rot13
+           _   _ _____
+ _ __ ___ | |_/ |___ /
+| '__/ _ \| __| | |_ \
+| | | (_) | |_| |___) |
+|_|  \___/ \__|_|____/
 
-a simple rot13 encoder/decoder 
 
-> usage:
-> ./rot13 [option] filename
+* rot13 [-e|-d] [-o] charoffset [-f] filename 
 
-* will output a rot13 encoding of the input text file.
+  options:
+ ------------------- 
+
+  -d          decode
+  -e          encode
+  -o          offset
+  -f          file input
+  --help      help me
+
 
