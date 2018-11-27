@@ -18,22 +18,29 @@
 typedef int bool;
 enum { false, true };
 
-void decoder(char *mes);
 void encoder(char *mes);
+void decoder(char *mes);
+void encoder_chst(char *mes);
+void decoder_chst(char *mes);
 void readfile(char *filename);
 void printhelp();
+bool exclude(char c);
+int strpos(char c);
 // global variables
+char * exclusions = "";
+char * charset = "entire ascii table";
 char * buffer;
 int rot = 13;
 
 int main(int argc, char ** argv)
-{    
-    if (argc <= 2) {
+{
+    if (argc <= 2) 
+    {
         printhelp();
         return 0;
     }
     
-    bool encode=true,decode=false,file=false;
+    bool encode=true,decode=false,file=false,chst=false;
     char *filename;
     for(int i=0; i < argc; i++)
     {
@@ -56,14 +63,26 @@ int main(int argc, char ** argv)
             filename = argv[i+1];
             file = true;
         }
+        else if (strcmp(argv[i],"-ex") == 0)
+        {
+            exclusions = argv[i+1];
+        }
+        else if (strcmp(argv[i],"-ch") == 0)
+        {
+            chst = true;
+            charset = argv[i+1];
+        }
         else if(strcmp(argv[i],"--help") == 0)
         {
             printhelp();
             return 0;
         }        
         else
-            continue;        
+            continue;
     }
+
+    printf("charset: %s\n", charset);
+
 
     //main logic
     if(file)
@@ -72,9 +91,9 @@ int main(int argc, char ** argv)
         buffer = argv[argc-1];
 
     if(encode)
-        encoder(buffer);
+        (chst) ? encoder_chst(buffer) : encoder(buffer);
     else if(decode)
-        decoder(buffer);
+        (chst) ? decoder_chst(buffer) : decoder(buffer);
     else
         printf("wrong input");
 
@@ -87,12 +106,10 @@ void encoder(char *mes)
 {
     for(int i = 0; i < strlen(mes); i++)
     {
-        if(mes[i] == 10)
-            continue; 
-        else if(mes[i] + rot > 126)
-            mes[i] = mes[i] + rot - 94;
+        if(exclude(mes[i]))
+            continue;
         else 
-            mes[i] = mes[i] + rot;
+            mes[i] = (mes[i] + rot) % 127;
     }
 }
 // decodes global buffer
@@ -100,12 +117,39 @@ void decoder(char *mes)
 {
     for(int i = 0; i < strlen(mes); i++)
     {
-        if(mes[i] == 10)
-            continue; 
-        else if(mes[i] - rot < 32)
-            mes[i] = mes[i] - rot + 94;
+        if(exclude(mes[i]))
+            continue;
         else 
-            mes[i] = mes[i] - rot;
+            mes[i] = (mes[i] - rot + 127) % 127;
+    }
+}
+
+// encodes global buffer
+void encoder_chst(char *mes)
+{
+    for(int i = 0; i < strlen(mes); i++)
+    {
+        if(exclude(mes[i]) || strpos(mes[i]) == -1)
+            continue;
+        else if (strpos(mes[i]) == -1)
+            continue;
+        else 
+            mes[i] = charset[(strpos(mes[i]) + rot) % strlen(charset)];
+        
+    }
+}
+
+void decoder_chst(char *mes)
+{
+    for(int i = 0; i < strlen(mes); i++)
+    {
+        if( exclude(mes[i]) || strpos(mes[i]) == -1)
+            continue;
+        else 
+            mes[i] = charset[
+                ( 
+                    strpos(mes[i]) - rot + strlen(charset) 
+                ) % strlen(charset) ];
     }
 }
 
@@ -129,11 +173,45 @@ void readfile(char *filename)
         fclose (f);
     }
 }
+// returns true if char is in exclusion list
+bool exclude(char c)
+{
+    for(int i = 0; i < strlen(exclusions); i++)
+        if(c == exclusions[i])
+            return true;
+    return false;
+}
+int strpos(char c)
+{
+    int i = (int)(strchr(charset, c) - charset);
+    return (i > -1 && i < 128) ? i : -1 ;
+}
 
 // prints help 
 void printhelp()
-{
-    printf("\x1B[32mhttps://github.com/CausticKirbyZ/rot13\n");
-    printf("\x1B[34m           _   _ _____\n _ __ ___ | |_/ |___ /\n| \'__/ _ \\| __| | |_ \\\n| | | (_) | |_| |___) |\n|_|  \\___/ \\__|_|____/\n\n\n");
-    printf("\x1B[37mrot13 [-d|-e] [-o] <charoffset> [-f] <filename> \n\n  options:\n ------------------- \n\n  -d          decode\n  -e          encode\n  -o          offset\n  -f          file input\n  --help      help me\n\n");
+{    
+    printf("\x1B[34m           _   _ _____\n _ __ ___ | |_/ |___ /\n| \'__/ _ \\| __| | |_ \\\n| | | (_) | |_| |___) |\n|_|  \\___/ \\__|_|____/\n");
+    printf("\x1B[32mhttps://github.com/CausticKirbyZ/rot13\n\n\n");
+    printf("\x1B[37mrot13 (-d | -e) [-o <charoffset>][-ex <exclusion list][-ch <charset>] ( (-f <filename>) | <message> )\n\n"
+    "  Usage:\n"
+    "--------------------------------------\n\n"
+    "  ./rot13 -e message\n"
+    "  ./rot13 -e -o 7 -f file1.txt\n"
+    "  ./rot13 -d -o 3 -ch abcd -f file2.txt\n"
+    "  ./rot13 -e -o 5 -ex , -f file3.csv\n\n\n"    
+    
+
+    "  Options:\n"
+    "--------------------------------------\n\n"
+    "  -d               decode\n"
+    "  -e               encode\n"
+    "  -o               offset\n"
+    "  -f               file input\n"
+    "  -ex              exclusion list\n"
+    "  -ch              character set, default is entire ascii table\n"
+    "  -h, --help       help me\n\n");
 }
+
+
+
+        
