@@ -1,3 +1,6 @@
 language: c
 sudo: false
 compiler: gcc
+script: 
+  - gcc rot13.c -o rot13
+  - ./rot13
