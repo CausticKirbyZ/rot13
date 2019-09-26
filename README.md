@@ -1,4 +1,6 @@
 # rot13
+[![Build Status](https://travis-ci.org/CausticKirbyZ/rot13.svg?branch=master)](https://travis-ci.org/CausticKirbyZ/rot13)
+
 https://github.com/CausticKirbyZ/rot13
 >```
 >           _   _ _____
